@@ -29,14 +29,14 @@ TORCH_CUDA_ARCH_LIST='8.0' FORCE_CUDA=1 python setup.py build install
 ```bash
 conda create --name maskdino python=3.8 -y
 conda activate maskdino
-conda install pytorch==1.9.0 torchvision==0.10.0 cudatoolkit=11.1 -c pytorch -c nvidia
+conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 pip install -U opencv-python
 
 # under your working directory
 git clone git@github.com:facebookresearch/detectron2.git
 cd detectron2
 pip install -e .
-pip install git+https://github.com/cocodataset/panopticapi.git
+pip install git+https://github.com/achbogga/panopticapi.git
 pip install git+https://github.com/mcordts/cityscapesScripts.git
 
 cd ..
