@@ -17,7 +17,7 @@ DATASETS:
   TRAIN: ("octiva_train_panoptic_with_sem_seg",)
   TEST: ("octiva_test_panoptic_with_sem_seg",)  # to evaluate instance and semantic performance as well
 SOLVER:
-  IMS_PER_BATCH: 4
+  IMS_PER_BATCH: 1
   BASE_LR: 0.0001
   STEPS: (25000, 32000)
   MAX_ITER: 36875

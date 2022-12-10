@@ -58,6 +58,8 @@ MODEL:
 SOLVER:
   AMP:
     ENABLED: True
+
 TEST:
   EVAL_PERIOD: 500
+OUTPUT_DIR: "/home/aboggaram/models/octiva_maskDino"
 #  EVAL_FLAG: 1
