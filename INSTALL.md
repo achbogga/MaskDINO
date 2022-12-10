@@ -40,7 +40,7 @@ pip install git+https://github.com/achbogga/panopticapi.git
 pip install git+https://github.com/mcordts/cityscapesScripts.git
 
 cd ..
-git clone git@github.com:facebookresearch/MaskDINO.git
+git clone git@github.com:achbogga/MaskDINO.git
 cd MaskDINO
 pip install -r requirements.txt
 cd maskdino/modeling/pixel_decoder/ops
