@@ -4,26 +4,36 @@ import os
 
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.data.datasets import load_sem_seg
-from detectron2.data.datasets.builtin_meta import COCO_CATEGORIES
+# from detectron2.data.datasets.builtin_meta import COCO_CATEGORIES
 from detectron2.utils.file_io import PathManager
 
+categories_json_file = "/media/aboggaram/storage/data/Octiva/octiva_panoptic_categories.json"
+with open(categories_json_file, 'r') as fp:
+    OCTIVA_CATEGORIES = json.load(fp)
+os.environ["OCTIVA_DATASET_ROOT"] = "/media/aboggaram/storage/data/Octiva/consolidated_coco_format_validated_Dec_2_2022"
+OCTIVA_DATASET_ROOT = os.environ["OCTIVA_DATASET_ROOT"]
 
-_PREDEFINED_SPLITS_COCO_PANOPTIC = {
-    "coco_2017_train_panoptic": (
+
+_PREDEFINED_SPLITS_OCTIVA_PANOPTIC = {
+    "octiva_train_panoptic": (
         # This is the original panoptic annotation directory
-        "coco/panoptic_train2017",
-        "coco/annotations/panoptic_train2017.json",
+        "images",
+        "train_panoptic_format.json",
+        "train.json",
         # This directory contains semantic annotations that are
         # converted from panoptic annotations.
         # It is used by PanopticFPN.
         # You can use the script at detectron2/datasets/prepare_panoptic_fpn.py
         # to create these directories.
-        "coco/panoptic_semseg_train2017",
+        "panoptic_format",
+        "semseg_format",
     ),
-    "coco_2017_val_panoptic": (
-        "coco/panoptic_val2017",
-        "coco/annotations/panoptic_val2017.json",
-        "coco/panoptic_semseg_val2017",
+    "octiva_test_panoptic": (
+        "images",
+        "test_panoptic_format.json",
+        "test.json",
+        "panoptic_format",
+        "semseg_format",
     ),
 }
 
@@ -36,10 +46,10 @@ def get_metadata():
     # visualization function in D2 handles thing and class classes differently
     # due to some heuristic used in Panoptic FPN. We keep the same naming to
     # enable reusing existing visualization functions.
-    thing_classes = [k["name"] for k in COCO_CATEGORIES if k["isthing"] == 1]
-    thing_colors = [k["color"] for k in COCO_CATEGORIES if k["isthing"] == 1]
-    stuff_classes = [k["name"] for k in COCO_CATEGORIES]
-    stuff_colors = [k["color"] for k in COCO_CATEGORIES]
+    thing_classes = [k["name"] for k in OCTIVA_CATEGORIES if k["isthing"] == 1]
+    thing_colors = [k["color"] for k in OCTIVA_CATEGORIES if k["isthing"] == 1]
+    stuff_classes = [k["name"] for k in OCTIVA_CATEGORIES]
+    stuff_colors = [k["color"] for k in OCTIVA_CATEGORIES]
 
     meta["thing_classes"] = thing_classes
     meta["thing_colors"] = thing_colors
@@ -57,7 +67,7 @@ def get_metadata():
     thing_dataset_id_to_contiguous_id = {}
     stuff_dataset_id_to_contiguous_id = {}
 
-    for i, cat in enumerate(COCO_CATEGORIES):
+    for i, cat in enumerate(OCTIVA_CATEGORIES):
         if cat["isthing"]:
             thing_dataset_id_to_contiguous_id[cat["id"]] = i
         # else:
@@ -103,10 +113,10 @@ def load_coco_panoptic_json(json_file, image_dir, gt_dir, semseg_dir, meta):
     for ann in json_info["annotations"]:
         image_id = int(ann["image_id"])
         # TODO: currently we assume image and label has the same filename but
-        # different extension, and images have extension ".jpg" for COCO. Need
+        # different extension, and images have extension ".png" for COCO. Need
         # to make image extension a user-provided argument if we extend this
         # function to support other COCO-like datasets.
-        image_file = os.path.join(image_dir, os.path.splitext(ann["file_name"])[0] + ".jpg")
+        image_file = os.path.join(image_dir, os.path.splitext(ann["file_name"])[0] + ".png")
         label_file = os.path.join(gt_dir, ann["file_name"])
         sem_label_file = os.path.join(semseg_dir, ann["file_name"])
         segments_info = [_convert_category_id(x, meta) for x in ann["segments_info"]]
@@ -130,8 +140,8 @@ def register_coco_panoptic_annos_sem_seg(
     name, metadata, image_root, panoptic_root, panoptic_json, sem_seg_root, instances_json
 ):
     panoptic_name = name
-    delattr(MetadataCatalog.get(panoptic_name), "thing_classes")
-    delattr(MetadataCatalog.get(panoptic_name), "thing_colors")
+    # delattr(MetadataCatalog.get(panoptic_name), "thing_classes")
+    # delattr(MetadataCatalog.get(panoptic_name), "thing_colors")
     MetadataCatalog.get(panoptic_name).set(
         thing_classes=metadata["thing_classes"],
         thing_colors=metadata["thing_colors"],
@@ -142,7 +152,11 @@ def register_coco_panoptic_annos_sem_seg(
     semantic_name = name + "_with_sem_seg"
     DatasetCatalog.register(
         semantic_name,
-        lambda: load_coco_panoptic_json(panoptic_json, image_root, panoptic_root, sem_seg_root, metadata),
+        lambda: load_coco_panoptic_json(panoptic_json,
+                                        image_root,
+                                        panoptic_root,
+                                        sem_seg_root,
+                                        metadata),
     )
     MetadataCatalog.get(semantic_name).set(
         sem_seg_root=sem_seg_root,
@@ -160,22 +174,19 @@ def register_coco_panoptic_annos_sem_seg(
 def register_all_coco_panoptic_annos_sem_seg(root):
     for (
         prefix,
-        (panoptic_root, panoptic_json, semantic_root),
-    ) in _PREDEFINED_SPLITS_COCO_PANOPTIC.items():
-        prefix_instances = prefix[: -len("_panoptic")]
-        instances_meta = MetadataCatalog.get(prefix_instances)
-        image_root, instances_json = instances_meta.image_root, instances_meta.json_file
-
+        (image_root, panoptic_json, instances_json,
+        panoptic_root, semantic_root),
+    ) in _PREDEFINED_SPLITS_OCTIVA_PANOPTIC.items():
         register_coco_panoptic_annos_sem_seg(
             prefix,
             get_metadata(),
-            image_root,
+            os.path.join(root, image_root),
             os.path.join(root, panoptic_root),
             os.path.join(root, panoptic_json),
             os.path.join(root, semantic_root),
-            instances_json,
+            os.path.join(root, instances_json),
         )
 
 
-_root = os.getenv("DETECTRON2_DATASETS", "datasets")
-register_all_coco_panoptic_annos_sem_seg(_root)
+# _root = os.getenv("DETECTRON2_DATASETS", "datasets")
+register_all_coco_panoptic_annos_sem_seg(OCTIVA_DATASET_ROOT)
