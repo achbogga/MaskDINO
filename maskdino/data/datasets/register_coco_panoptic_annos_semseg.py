@@ -10,7 +10,7 @@ from detectron2.utils.file_io import PathManager
 categories_json_file = "/home/aboggaram/data/Octiva/octiva_panoptic_categories.json"
 with open(categories_json_file, 'r') as fp:
     OCTIVA_CATEGORIES = json.load(fp)
-os.environ["OCTIVA_DATASET_ROOT"] = "/home/aboggaram/data/Octiva/consolidated_coco_format_validated_Dec_2_2022"
+os.environ["OCTIVA_DATASET_ROOT"] = "/home/aboggaram/data/Octiva/consolidated_coco_format_validated_Dec_12_2022"
 OCTIVA_DATASET_ROOT = os.environ["OCTIVA_DATASET_ROOT"]
 
 
